@@ -2,13 +2,10 @@
 #include "lz.h"
 
 int main() {
-    lz_list* list = NULL;
-    char str[LZ_MAXPATTERNLEN] = "abs";
-    char str1[LZ_MAXPATTERNLEN] = "ffs";
-    LZ_list_push(&list, str, 3);
-    LZ_list_push(&list, str1, 3);
-    // printf("%p\n", list);
-
-    printf("%d\n", LZ_search_list(list, str1, 0));
+    short buf16[7] = { 'H', 'e', 'l', 'l', 'o', ' ', 0 };
+    char buf[6] = "World";
+    LZ_append_str16(buf16, buf, 6, 7);
+    
+    for ( int i = 0; i < 7; i++ ) printf("%c", buf16[i]);
     return 0;
 }

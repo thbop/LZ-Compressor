@@ -39,11 +39,25 @@ int LZ_search_list( lz_list *list, char symbol[LZ_MAXPATTERNLEN], unsigned int x
     LZ_search_list( list->next, symbol, x+1 );
 }
 
+int LZ_append_str16(short* dest, char* src, size_t src_size, size_t max_size) {
+    size_t dest_t = 0;               // Null terminator
+    while ( dest[dest_t] ) dest_t++; // Find the end of the destination; the place to append
+
+    if ( src_size+dest_t > max_size ) return 1;
+
+    for ( size_t i = 0; i < src_size; i++ )
+        dest[dest_t+i] = src[i];
+        
+    return 1;
+}
+
 int LZ_compress( char *src, char *dest, size_t dest_size ) {
     size_t
         src_len = strlen(src),
         cursor  = 0;
     char cursor_delta = 1;
+
+    short *unpacked_dest = (short*)calloc(dest_size>>1, sizeof(short)); // Remember to pack and free
 
     lz_list *list = NULL; // Head of the linked list describing known symbols
     int list_size = -1;   // Since the list grows from the front to be O(1), I'll use some weird math to get proper non-shifting indices: a - x; while a++
@@ -51,6 +65,11 @@ int LZ_compress( char *src, char *dest, size_t dest_size ) {
     while ( cursor < src_len ) {
         if ( list == NULL ) {
             LZ_list_push(&list, src+cursor, cursor_delta); list_size++;
+            
+            cursor++;
+        }
+        else {
+            
         }
     }
 }
