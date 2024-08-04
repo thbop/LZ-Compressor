@@ -42,7 +42,7 @@ int LZ_search_list( lz_list *list, char symbol[LZ_MAXPATTERNLEN], unsigned int x
 size_t LZ_str16len( short* str ) {
     size_t i = 0;
     while ( str[i] ) i++;
-    return i-1;
+    return i;
 }
 
 
@@ -63,25 +63,46 @@ long _LZ_next_two( char *src_loc, char loc_d, char *pattern, lz_list **list, siz
     else _LZ_next_two( src_loc, loc_d+1, pattern, list, list_size, search );
 }
 
-long LZ_next_two( char *src, size_t cursor, lz_list **list, size_t *list_size ) {
+long LZ_next_two( char *src, size_t *cursor, lz_list **list, size_t *list_size ) {
     char pattern[LZ_MAXPATTERNLEN] = { 0 };
-    return _LZ_next_two( src+cursor, 0, pattern, list, list_size, -1 );
+    long two = _LZ_next_two( src+*cursor, 0, pattern, list, list_size, -1 );
+    *cursor += strlen(pattern);
+    return two;
 }
 
 int LZ_compress( char *src, char *dest, size_t dest_size ) {
     size_t
         src_len = strlen(src),
         cursor  = 0;
+    char cursor_delta;
 
-    size_t unpacked_dest_size = dest_size>>1;
-    short *unpacked_dest      = (short*)calloc(unpacked_dest_size, sizeof(short)); // Remember to pack and free
+    short *unpacked_dest      = (short*)calloc(dest_size, sizeof(short)); // Remember to pack and free
 
-    lz_list *list = NULL;     // Head of the linked list describing known symbols
-    size_t list_size = 255;   // Since the list grows from the front to be O(1), I'll use some weird math to get proper non-shifting indices: a=list_size; a - x; while a++
+    lz_list *list = NULL;        // Head of the linked list describing known symbols
+    size_t list_size = 255;      // Since the list grows from the front to be O(1), I'll use some weird math to get proper non-shifting indices: a=list_size; a - x; while a++
     
     
     while ( cursor < src_len ) {
+        long two          = LZ_next_two( src, &cursor, &list, &list_size );
+        size_t append_loc = LZ_str16len(unpacked_dest);
+
+        short
+            A = (short)(two >> 16),
+            B = (short)(two & 0xFFF); // Intentionally 0xFFF not 0xFFFF
+
+        if ( !A ) {
+            if ( append_loc > dest_size ) return 1;
+            unpacked_dest[append_loc] = B;
+        }
+        else {
+            if ( append_loc+1 > dest_size ) return 1;
+            unpacked_dest[append_loc  ] = A;
+            unpacked_dest[append_loc+1] = B;
+        }
     }
+
+    for ( int i = 0; i < 14; i++ )
+        printf("%d ", unpacked_dest[i]);
 
     return 0;
 }
