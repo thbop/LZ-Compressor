@@ -128,7 +128,10 @@ int LZ_compress( u8 *src, u8 *dest, size_t dest_size ) {
         }
     }
     LZ_list_free(list);
+    
+    LZ_pack(unpacked_dest, dest, dest_size);
 
+    if ( strlen( dest ) > src_len ) return 3;
 
     // for ( int i = 0; i < 28; i++ )
     //     printf("%d ", unpacked_dest[i]);
